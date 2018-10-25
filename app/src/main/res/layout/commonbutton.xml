@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@color/colorPrimary">
+
+    <TextView
+        android:id="@+id/submitButton"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="@string/login"
+        android:layout_weight="1"
+        style="@style/ButtonAppearance"/>
+
+
+    <com.github.ybq.android.spinkit.SpinKitView xmlns:app="http://schemas.android.com/apk/res-auto"
+        style="@style/SpinKitView.Small.FadingCircle"
+        android:id="@+id/progressBar"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="center"
+        app:SpinKit_Color="@color/colorWhite"
+        android:visibility="gone"
+        app:layout_constraintRight_toRightOf="@+id/submitButton" />
+
+
+</LinearLayout>

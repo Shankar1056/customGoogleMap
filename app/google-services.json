@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "310122535770",
+    "firebase_url": "https://map-dd0fc.firebaseio.com",
+    "project_id": "map-dd0fc",
+    "storage_bucket": "map-dd0fc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:310122535770:android:65b2fa7a16285e8a",
+        "android_client_info": {
+          "package_name": "tyler.a3frames.myfirstapplication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "310122535770-25qogklqprpa9c4fu9tdh5msu8nec2ap.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "tyler.a3frames.myfirstapplication",
+            "certificate_hash": "0169fb214a4c443fc572715d21378e37678e832d"
+          }
+        },
+        {
+          "client_id": "310122535770-ef709u088h9b0qrmkthfmjd177nikaug.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0oBzjCwFBeWcmGQKZTpY5s-_Fwj7A_VE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "310122535770-ef709u088h9b0qrmkthfmjd177nikaug.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

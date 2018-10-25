@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">MyFirstApplication</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="hint_email">Enter Email</string>
+    <string name="hint_password">Enter Password</string>
+    <string name="login">Login</string>
+    <string name="errorEmail">Enter your email id:</string>
+    <string name="invalidEmail">Enter correct email id:</string>
+    <string name="errorpassword">Enter password</string>
+    <string name="invalidpassword">Password should be atleast 5 character</string>
+    <string name="hint_lastname">Last Name</string>
+    <string name="hint_firstname">First Name</string>
+</resources>
