@@ -6,6 +6,9 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
 import org.json.JSONObject
 import tyler.a3frames.myfirstapplication.presenter.MapPresenter
+import android.text.method.TextKeyListener.clear
+
+
 
 class ParserTask(private val option: MapPresenter.Poliline): AsyncTask<String, Int, List<List<HashMap<String, String>>>>() {
 
@@ -51,13 +54,16 @@ class ParserTask(private val option: MapPresenter.Poliline): AsyncTask<String, I
                 val lng = java.lang.Double.parseDouble(point["lng"])
                 val position = LatLng(lat, lng)
 
-                points.add(position)
+                lineOptions.add(position)
             }
 
+
+
             // Adding all the points in the route to LineOptions
-            lineOptions.addAll(points)
+//            lineOptions.addAll(points)
             lineOptions.width(10f)
-            lineOptions.color(Color.RED)
+            lineOptions.geodesic(true)
+            lineOptions.color(Color.BLUE)
 
 
         }

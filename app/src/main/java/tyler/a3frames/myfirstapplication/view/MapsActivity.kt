@@ -17,11 +17,13 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.location.Location
+import android.location.LocationManager
 import android.os.Build
+import android.os.Looper
 import android.widget.Toast
 import com.google.android.gms.common.internal.service.Common
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.tasks.OnSuccessListener
 import tyler.a3frames.myfirstapplication.common.FetchUrl
@@ -29,9 +31,23 @@ import tyler.a3frames.myfirstapplication.common.Utilz
 import tyler.a3frames.myfirstapplication.presenter.MapPresenter
 
 
-class MapsActivity : FragmentActivity(), OnMapReadyCallback, FetchUrl.Polyline {
+class MapsActivity : FragmentActivity(), OnMapReadyCallback, LocationListener, FetchUrl.Polyline {
+
+    private var polylineFinal: Polyline?= null
+    private var mLocationRequest: LocationRequest? = null
+    private val UPDATE_INTERVAL:Long = 10 * 1000;
+    private val FASTEST_INTERVAL:Long = 2000;
+    var isFirstTime = true
+
+    override fun onLocationChanged(p0: Location?) {
+        drawRoute(LatLng(p0!!.latitude, p0.longitude), LatLng(12.903000, 77.620317))
+    }
+
     override fun getpolyline(value: PolylineOptions) {
-        mMap!!.addPolyline(value)
+        if (polylineFinal != null){
+            polylineFinal!!.remove()
+        }
+        polylineFinal = mMap!!.addPolyline(value)
     }
 
     private var fusedLocationClient: FusedLocationProviderClient? = null
@@ -50,11 +66,8 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, FetchUrl.Polyline {
 
 
 
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                getLocation();
-            } else
-                checkLocationPermission()
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkPermission()) {
+            getLocation();
         } else
             getLocation()
 
@@ -65,20 +78,8 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, FetchUrl.Polyline {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         val originLatlong = LatLng(12.956189, 77.637709)
-        val destinationLatlong = LatLng(12.903000,77.620317)
-       mMap!!.addMarker(MarkerOptions().position(originLatlong).title("3Frames"))
-        mMap!!.animateCamera(CameraUpdateFactory
-                .newCameraPosition(CameraPosition.Builder()
-                        .target(LatLng(originLatlong.latitude, originLatlong.longitude)).zoom(15f).build()))
-
-         mMap!!.addMarker(MarkerOptions().position(destinationLatlong).title("ViratNagar"))
-        mMap!!.animateCamera(CameraUpdateFactory
-                .newCameraPosition(CameraPosition.Builder()
-                        .target(LatLng(destinationLatlong.latitude, destinationLatlong.longitude)).zoom(15f).build()))
-
-        val url = Utilz.getUrl(originLatlong, destinationLatlong)
-        val FetchUrl = FetchUrl(this)
-        FetchUrl.execute(url)
+        val destinationLatlong = LatLng(12.903000, 77.620317)
+       drawRoute(originLatlong, destinationLatlong)
 
         /*mMap!!.setOnMapClickListener { point ->
             if (MarkerPoints.size > 1) {
@@ -118,59 +119,109 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, FetchUrl.Polyline {
 
     }
 
+    var marker: Marker?= null
+    private fun drawRoute(originLatlong: LatLng, destinationLatlong: LatLng) {
+
+        if(marker != null){
+            marker!!.remove();
+
+        }
+        marker = mMap!!.addMarker(MarkerOptions().position(originLatlong))
+
+        mMap!!.animateCamera(CameraUpdateFactory
+                .newCameraPosition(CameraPosition.Builder()
+                        .target(LatLng(originLatlong.latitude, originLatlong.longitude)).zoom(13f).build()))
+         mMap!!.addMarker(MarkerOptions().position(destinationLatlong))
+        mMap!!.animateCamera(CameraUpdateFactory
+                .newCameraPosition(CameraPosition.Builder()
+                        .target(LatLng(destinationLatlong.latitude, destinationLatlong.longitude)).zoom(13f).build()))
+
+        enableLocation()
+        val url = Utilz.getUrl(originLatlong, destinationLatlong)
+        val FetchUrl = FetchUrl(this)
+        FetchUrl.execute(url)
+    }
+
     @SuppressLint("MissingPermission")
     private fun getLocation() {
         fusedLocationClient?.lastLocation?.addOnSuccessListener(this, OnSuccessListener { location ->
             if (location != null) {
-                mMap!!.animateCamera(CameraUpdateFactory
-                        .newCameraPosition(CameraPosition.Builder()
-                                .target(LatLng(location.latitude, location.longitude)).zoom(15f).build()))
-                mMap!!.setMyLocationEnabled(true)
-                mMap!!.getUiSettings().setMyLocationButtonEnabled(true)
-                mMap!!.getUiSettings().setCompassEnabled(true)
+                enableLocation()
                 return@OnSuccessListener
             }
 
 
         })?.addOnFailureListener(this) { e -> Log.w("", "getLastLocation:onFailure", e) }
     }
-        private fun checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                mMap!!.setMyLocationEnabled(true)
-                mMap!!.getUiSettings().setMyLocationButtonEnabled(true)
-                mMap!!.getUiSettings().setCompassEnabled(true)
-                AlertDialog.Builder(this)
-                        .setTitle("Location Permission Needed")
-                        .setMessage("This app needs the Location permission, please accept to use location functionality")
-                        .setPositiveButton("OK", DialogInterface.OnClickListener { dialog, which ->
-                            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_LOCATION_CODE)
-                        })
-                        .create()
-                        .show()
 
-            } else ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_LOCATION_CODE)
-        }
+    @SuppressLint("MissingPermission")
+    private fun enableLocation() {
+
+        mMap!!.getUiSettings().setMyLocationButtonEnabled(true)
+        mMap!!.getUiSettings().setCompassEnabled(true)
+        mMap!!.setMyLocationEnabled(true)
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        when (requestCode) {
-            REQUEST_LOCATION_CODE -> {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the location-related task you need to do.
-                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                        Toast.makeText(this, "permission granted", Toast.LENGTH_LONG).show()
-                    }
-                } else {
-                    // permission denied, boo! Disable the functionality that depends on this permission.
-                    Toast.makeText(this, "permission denied", Toast.LENGTH_LONG).show()
-                }
-                return
+
+    override fun onStart() {
+        super.onStart()
+        startLocationUpdates()
+    }
+    protected fun startLocationUpdates() {
+        // initialize location request object
+        mLocationRequest = LocationRequest.create()
+        mLocationRequest!!.run {
+            setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+            setInterval(UPDATE_INTERVAL)
+            setFastestInterval(FASTEST_INTERVAL)
+        }
+
+        // initialize locationo setting request builder object
+        val builder = LocationSettingsRequest.Builder()
+        builder.addLocationRequest(mLocationRequest!!)
+        val locationSettingsRequest = builder.build()
+
+        // initialize location service object
+        val settingsClient = LocationServices.getSettingsClient(this)
+        settingsClient!!.checkLocationSettings(locationSettingsRequest)
+
+        // call register location listner
+        registerLocationListner()
+
+
+    }
+
+
+    private fun registerLocationListner() {
+        val locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult?) {
+                onLocationChanged(locationResult!!.getLastLocation())
+            }
+        }
+        // add permission if android version is greater then 23
+        if(Build.VERSION.SDK_INT >= 23 && checkPermission()) {
+            LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, locationCallback, Looper.myLooper())
+        }
+    }
+    private fun checkPermission() : Boolean {
+        if (ContextCompat.checkSelfPermission(this , Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        } else {
+            requestPermissions()
+            return false
+        }
+    }
+    private fun requestPermissions() {
+        ActivityCompat.requestPermissions(this, arrayOf("Manifest.permission.ACCESS_FINE_LOCATION"),1)
+    }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if(requestCode == 1) {
+            if (permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION ) {
+                registerLocationListner()
             }
         }
     }
-
 
 }
 
