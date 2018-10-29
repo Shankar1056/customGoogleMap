@@ -6,4 +6,9 @@
     <color name="hintColor">#A9A9A9</color>
     <color name="textColorBlack">#636363</color>
     <color name="colorWhite">#FFFFFF</color>
+
+    <color name="grey">#F7F7F7</color>
+    <color name="aubergine">#31050A</color>
+    <color name="bloodred">#8A0E1D</color>
+    <color name="app_background">#DADADA</color>
 </resources>

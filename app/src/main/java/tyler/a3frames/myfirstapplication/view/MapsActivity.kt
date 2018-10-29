@@ -4,10 +4,6 @@ import android.Manifest
 import android.support.v4.app.FragmentActivity
 import android.os.Bundle
 import android.util.Log
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
 import tyler.a3frames.myfirstapplication.R
 import android.content.pm.PackageManager
 import android.support.v4.content.ContextCompat
@@ -21,17 +17,20 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.os.Looper
+import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
 import com.google.android.gms.common.internal.service.Common
 import com.google.android.gms.location.*
+import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.tasks.OnSuccessListener
 import tyler.a3frames.myfirstapplication.common.FetchUrl
 import tyler.a3frames.myfirstapplication.common.Utilz
 import tyler.a3frames.myfirstapplication.presenter.MapPresenter
+import tyler.a3frames.myfirstapplication.view.fragment.CoordinateFragment
 
 
-class MapsActivity : FragmentActivity(), OnMapReadyCallback, LocationListener, FetchUrl.Polyline {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, FetchUrl.Polyline {
 
     private var polylineFinal: Polyline?= null
     private var mLocationRequest: LocationRequest? = null
@@ -72,6 +71,15 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, LocationListener, F
             getLocation()
 
         MarkerPoints = ArrayList<LatLng>()
+
+        gotoCoordinatFragment()
+    }
+
+    private fun gotoCoordinatFragment() {
+        val fragmentTransaction = fragmentManager.beginTransaction()
+        fragmentTransaction.replace(R.id.frameLayout, CoordinateFragment())
+        fragmentTransaction.addToBackStack(null)
+        fragmentTransaction.commit()
     }
 
 
@@ -79,7 +87,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, LocationListener, F
         mMap = googleMap
         val originLatlong = LatLng(12.956189, 77.637709)
         val destinationLatlong = LatLng(12.903000, 77.620317)
-       drawRoute(originLatlong, destinationLatlong)
+        drawRoute(originLatlong, destinationLatlong)
 
         /*mMap!!.setOnMapClickListener { point ->
             if (MarkerPoints.size > 1) {
@@ -89,7 +97,6 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, LocationListener, F
             MarkerPoints.add(point)
             val options = MarkerOptions()
             options.position(point)
-
             if (MarkerPoints.size == 1) {
                 options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
                 mMap!!.animateCamera(CameraUpdateFactory
@@ -101,16 +108,13 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, LocationListener, F
                         .newCameraPosition(CameraPosition.Builder()
                                 .target(LatLng(point.latitude, point.longitude)).zoom(15f).build()))
             }
-
             mMap!!.addMarker(options)
             if (MarkerPoints.size >= 2) {
                 val origin = MarkerPoints[0]
                 val dest = MarkerPoints[1]
-
                 val url = Utilz.getUrl(origin, dest)
                 Log.d("onMapClick", url.toString())
                 val FetchUrl = FetchUrl(this)
-
                 FetchUrl.execute(url)
                 mMap!!.moveCamera(CameraUpdateFactory.newLatLng(origin))
                 mMap!!.animateCamera(CameraUpdateFactory.zoomTo(15f))
@@ -131,7 +135,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, LocationListener, F
         mMap!!.animateCamera(CameraUpdateFactory
                 .newCameraPosition(CameraPosition.Builder()
                         .target(LatLng(originLatlong.latitude, originLatlong.longitude)).zoom(13f).build()))
-         mMap!!.addMarker(MarkerOptions().position(destinationLatlong))
+        mMap!!.addMarker(MarkerOptions().position(destinationLatlong))
         mMap!!.animateCamera(CameraUpdateFactory
                 .newCameraPosition(CameraPosition.Builder()
                         .target(LatLng(destinationLatlong.latitude, destinationLatlong.longitude)).zoom(13f).build()))
@@ -224,6 +228,4 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, LocationListener, F
     }
 
 }
-
-
 
