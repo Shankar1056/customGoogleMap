@@ -12,12 +12,12 @@
         android:layout_height="0dp"
         android:layout_width="match_parent"
         map:layout_constraintTop_toTopOf="parent"
-        map:layout_constraintHeight_percent=".6"/>
+        map:layout_constraintHeight_percent=".6"
+        android:name="com.google.android.gms.maps.SupportMapFragment"/>
     <FrameLayout
         android:id="@+id/frameLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        map:layout_constraintTop_toTopOf="parent"
         map:layout_constraintBottom_toBottomOf="parent"
         map:layout_constraintHeight_percent=".4"/>
 

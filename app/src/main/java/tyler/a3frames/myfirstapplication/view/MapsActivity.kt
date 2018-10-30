@@ -1,32 +1,24 @@
 package tyler.a3frames.myfirstapplication.view
 
 import android.Manifest
-import android.support.v4.app.FragmentActivity
 import android.os.Bundle
 import android.util.Log
 import tyler.a3frames.myfirstapplication.R
 import android.content.pm.PackageManager
 import android.support.v4.content.ContextCompat
 import android.support.v4.app.ActivityCompat
-import android.content.DialogInterface
 import android.annotation.SuppressLint
-import android.app.AlertDialog
-import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.location.Location
-import android.location.LocationManager
 import android.os.Build
 import android.os.Looper
 import android.support.v7.app.AppCompatActivity
-import android.widget.Toast
-import com.google.android.gms.common.internal.service.Common
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.tasks.OnSuccessListener
 import tyler.a3frames.myfirstapplication.common.FetchUrl
 import tyler.a3frames.myfirstapplication.common.Utilz
-import tyler.a3frames.myfirstapplication.presenter.MapPresenter
+import tyler.a3frames.myfirstapplication.listener.OnClickListenr
 import tyler.a3frames.myfirstapplication.view.fragment.CoordinateFragment
 
 
@@ -36,7 +28,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
     private var mLocationRequest: LocationRequest? = null
     private val UPDATE_INTERVAL:Long = 10 * 1000;
     private val FASTEST_INTERVAL:Long = 2000;
-    var isFirstTime = true
 
     override fun onLocationChanged(p0: Location?) {
         drawRoute(LatLng(p0!!.latitude, p0.longitude), LatLng(12.903000, 77.620317))
@@ -65,10 +56,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
 
 
 
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkPermission()) {
-            getLocation();
-        } else
+        if (!checkPermissions()) {
+            requestPermissions()
+        } else {
             getLocation()
+        }
 
         MarkerPoints = ArrayList<LatLng>()
 
@@ -77,7 +69,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
 
     private fun gotoCoordinatFragment() {
         val fragmentTransaction = fragmentManager.beginTransaction()
-        fragmentTransaction.replace(R.id.frameLayout, CoordinateFragment())
+        fragmentTransaction.replace(R.id.frameLayout, CoordinateFragment(object : OnClickListenr {
+            override fun onClick(coordinate: Coordinate) {
+                mMap!!.clear()
+                drawRoute(LatLng(coordinate.fromlat, coordinate.fromlon), LatLng(coordinate.tolat, coordinate.toLon))
+            }
+        }))
         fragmentTransaction.addToBackStack(null)
         fragmentTransaction.commit()
     }
@@ -89,37 +86,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
         val destinationLatlong = LatLng(12.903000, 77.620317)
         drawRoute(originLatlong, destinationLatlong)
 
-        /*mMap!!.setOnMapClickListener { point ->
-            if (MarkerPoints.size > 1) {
-                MarkerPoints.clear()
-                mMap!!.clear()
-            }
-            MarkerPoints.add(point)
-            val options = MarkerOptions()
-            options.position(point)
-            if (MarkerPoints.size == 1) {
-                options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                mMap!!.animateCamera(CameraUpdateFactory
-                        .newCameraPosition(CameraPosition.Builder()
-                                .target(LatLng(point.latitude, point.longitude)).zoom(15f).build()))
-            } else if (MarkerPoints.size == 2) {
-                options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
-                mMap!!.animateCamera(CameraUpdateFactory
-                        .newCameraPosition(CameraPosition.Builder()
-                                .target(LatLng(point.latitude, point.longitude)).zoom(15f).build()))
-            }
-            mMap!!.addMarker(options)
-            if (MarkerPoints.size >= 2) {
-                val origin = MarkerPoints[0]
-                val dest = MarkerPoints[1]
-                val url = Utilz.getUrl(origin, dest)
-                Log.d("onMapClick", url.toString())
-                val FetchUrl = FetchUrl(this)
-                FetchUrl.execute(url)
-                mMap!!.moveCamera(CameraUpdateFactory.newLatLng(origin))
-                mMap!!.animateCamera(CameraUpdateFactory.zoomTo(15f))
-            }
-        }*/
 
     }
 
@@ -203,28 +169,58 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
             }
         }
         // add permission if android version is greater then 23
-        if(Build.VERSION.SDK_INT >= 23 && checkPermission()) {
-            LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, locationCallback, Looper.myLooper())
+        if(checkPermissions()) {
+            //LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, locationCallback, Looper.myLooper())
         }
     }
-    private fun checkPermission() : Boolean {
-        if (ContextCompat.checkSelfPermission(this , Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            return true;
+
+    fun checkPermissions(): Boolean {
+        val permissionState = ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_COARSE_LOCATION)
+        return permissionState == PackageManager.PERMISSION_GRANTED
+    }
+
+    fun startLocationPermissionRequest() {
+        ActivityCompat.requestPermissions(this@MapsActivity,
+                arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+                REQUEST_PERMISSIONS_REQUEST_CODE)
+    }
+
+    fun requestPermissions() {
+        val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.ACCESS_COARSE_LOCATION)
+
+
+        if (shouldProvideRationale) {
+            ActivityCompat.requestPermissions(this,
+                    arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+                    REQUEST_PERMISSIONS_REQUEST_CODE)
+
         } else {
-            requestPermissions()
-            return false
+            Log.i(TAG, "Requesting permission")
+            startLocationPermissionRequest()
+
         }
     }
-    private fun requestPermissions() {
-        ActivityCompat.requestPermissions(this, arrayOf("Manifest.permission.ACCESS_FINE_LOCATION"),1)
-    }
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if(requestCode == 1) {
-            if (permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION ) {
-                registerLocationListner()
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
+                                            grantResults: IntArray) {
+        Log.i(TAG, "onRequestPermissionResult")
+        if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
+            if (grantResults.size <= 0) {
+                Log.i(TAG, "User interaction was cancelled.")
+            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getLocation()
+
+            } else {
+
             }
         }
+    }
+    companion object {
+
+        private val TAG = "MapActivity"
+        private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
     }
 
 }

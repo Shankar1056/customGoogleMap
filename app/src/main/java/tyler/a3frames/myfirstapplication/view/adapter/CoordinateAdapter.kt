@@ -19,7 +19,7 @@ class CoordinateAdapter (private val catlist: ArrayList<Coordinate>, private val
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = catlist[position]
 
-        holder.titleTV.text = "lat: "+item.lat+", lon"+item.lon
+        holder.titleTV.text = "lat: "+item.fromlat+","+item.fromlon+" lon"+item.tolat+","+item.toLon
     }
 
     override fun getItemCount(): Int {
